@@ -20,13 +20,34 @@ public class RegistroPontoController : ControllerBase
         _userManager = userManager;
     }
 
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<RegistroDoPonto.Models.RegistroDoPonto>>> GetRegistros()
+    [HttpGet("ByUsuario/{userId}")]
+    public async Task<ActionResult<IEnumerable<RegistroDoPontoDTO>>> GetRegistrosByUsuarioId(string userId)
     {
-        return await _context.Registros.ToListAsync();
+        var registros = await _context.Registros
+                                .Where(r => r.UsuarioId == userId)
+                                .ToListAsync();
+
+        return Ok(registros.Select(r => new RegistroDoPontoDTO
+        {
+            UsuarioId = r.UsuarioId,
+            DataHora = r.DataHora,
+            Tipo = r.Tipo
+        }));
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<RegistroDoPontoDTO>>> GetRegistros()
+    {
+        var registros = await _context.Registros.ToListAsync();
+        return Ok(registros.Select(r => new RegistroDoPontoDTO
+        {
+            UsuarioId = r.UsuarioId,
+            DataHora = r.DataHora,
+            Tipo = r.Tipo
+        }));
     }
     [HttpPost]
-    public async Task<ActionResult<RegistroDoPonto.Models.RegistroDoPonto>> RegistrarPonto([FromBody] RegistroDoPontoDTO registroDto)
+    public async Task<ActionResult<RegistroDoPontoDTO>> RegistrarPonto([FromBody] RegistroDoPontoDTO registroDto)
     {
         var usuarioExiste = await _userManager.FindByIdAsync(registroDto.UsuarioId);
         if (usuarioExiste == null)
@@ -44,17 +65,32 @@ public class RegistroPontoController : ControllerBase
         _context.Registros.Add(novoRegistro);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetRegistro), new { id = novoRegistro.Id }, novoRegistro);
+        var registroRetornoDto = new RegistroDoPontoDTO
+        {
+            UsuarioId = novoRegistro.UsuarioId,
+            DataHora = novoRegistro.DataHora,
+            Tipo = novoRegistro.Tipo
+        };
+
+        return CreatedAtAction(nameof(GetRegistro), new { id = novoRegistro.Id }, registroRetornoDto);
     }
     [HttpGet("{id}")]
-    public async Task<ActionResult<RegistroDoPonto.Models.RegistroDoPonto>> GetRegistro(int id)
+    public async Task<ActionResult<RegistroDoPontoDTO>> GetRegistro(int id)
     {
         var registro = await _context.Registros.FirstOrDefaultAsync(r => r.Id == id);
         if (registro == null)
         {
             return NotFound();
         }
-        return registro;
+
+        var registroRetornoDto = new RegistroDoPontoDTO
+        {
+            UsuarioId = registro.UsuarioId,
+            DataHora = registro.DataHora,
+            Tipo = registro.Tipo
+        };
+
+        return registroRetornoDto;
     }
     [HttpPut("{id}")]
     public async Task<IActionResult> AtualizarRegistro(int id, [FromBody] RegistroDoPontoDTO registroDto)

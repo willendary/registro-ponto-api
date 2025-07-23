@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using RegistroDoPonto.Models.Enums;
 
 namespace RegistroDoPonto.Models.DTOs;
 public class RegistroDoPontoDTO

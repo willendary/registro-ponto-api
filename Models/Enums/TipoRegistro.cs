@@ -1,5 +1,16 @@
+using System.Text.Json.Serialization;
+
+namespace RegistroDoPonto.Models.Enums;
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
 public enum TipoRegistro
 {
-    Entrada = 1,
-    Saida = 2
+    [JsonPropertyName("entrada")]
+    entrada,
+    [JsonPropertyName("saída")]
+    saída,
+    [JsonPropertyName("saidaAlmoco")]
+    saidaAlmoco,
+    [JsonPropertyName("voltaAlmoco")]
+    voltaAlmoco
 }
