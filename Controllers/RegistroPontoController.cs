@@ -1,0 +1,103 @@
+using Microsoft.AspNetCore.Mvc;
+using RegistroDoPonto.Models;
+using RegistroDoPonto.Models.DTOs;
+using RegistroDoPonto.Data;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+
+[ApiController]
+[Route("[controller]")]
+[Authorize]
+public class RegistroPontoController : ControllerBase
+{
+    private readonly AppDbContext _context;
+    private readonly UserManager<Usuario> _userManager;
+
+    public RegistroPontoController(AppDbContext context, UserManager<Usuario> userManager)
+    {
+        _context = context;
+        _userManager = userManager;
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<RegistroDoPonto.Models.RegistroDoPonto>>> GetRegistros()
+    {
+        return await _context.Registros.ToListAsync();
+    }
+    [HttpPost]
+    public async Task<ActionResult<RegistroDoPonto.Models.RegistroDoPonto>> RegistrarPonto([FromBody] RegistroDoPontoDTO registroDto)
+    {
+        var usuarioExiste = await _userManager.FindByIdAsync(registroDto.UsuarioId);
+        if (usuarioExiste == null)
+        {
+            return BadRequest("Usuário não encontrado.");
+        }
+
+        var novoRegistro = new RegistroDoPonto.Models.RegistroDoPonto
+        {
+            UsuarioId = registroDto.UsuarioId,
+            DataHora = registroDto.DataHora,
+            Tipo = registroDto.Tipo
+        };
+
+        _context.Registros.Add(novoRegistro);
+        await _context.SaveChangesAsync();
+
+        return CreatedAtAction(nameof(GetRegistro), new { id = novoRegistro.Id }, novoRegistro);
+    }
+    [HttpGet("{id}")]
+    public async Task<ActionResult<RegistroDoPonto.Models.RegistroDoPonto>> GetRegistro(int id)
+    {
+        var registro = await _context.Registros.FirstOrDefaultAsync(r => r.Id == id);
+        if (registro == null)
+        {
+            return NotFound();
+        }
+        return registro;
+    }
+    [HttpPut("{id}")]
+    public async Task<IActionResult> AtualizarRegistro(int id, [FromBody] RegistroDoPontoDTO registroDto)
+    {
+        var registroExistente = await _context.Registros.FirstOrDefaultAsync(r => r.Id == id);
+        if (registroExistente == null)
+        {
+            return NotFound();
+        }
+
+        // Não permitir a alteração do UsuarioId em uma atualização
+        // Se o UsuarioId precisar ser alterado, um novo registro deve ser criado.
+        registroExistente.DataHora = registroDto.DataHora;
+        registroExistente.Tipo = registroDto.Tipo;
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            if (!_context.Registros.Any(e => e.Id == id))
+            {
+                return NotFound();
+            }
+            else
+            {
+                throw;
+            }
+        }
+
+        return NoContent();
+    }
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeletarRegistro(int id)
+    {
+        var registro = await _context.Registros.FirstOrDefaultAsync(r => r.Id == id);
+        if (registro == null)
+        {
+            return NotFound();
+        }
+        _context.Registros.Remove(registro);
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
+}

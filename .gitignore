@@ -1,0 +1,38 @@
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+build/
+*.log
+*.pdb
+*.dll
+*.exe
+
+# Packages
+packages/
+*.nupkg
+project.lock.json
+
+# Rider
+.idea/
+*.iml
+
+# Resharper
+*.DotSettings
+
+# Local appsettings
+appsettings.Development.json
+appsettings.json
+
+# Other
+*.db
+*.sqlite
