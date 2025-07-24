@@ -4,6 +4,7 @@ using RegistroDoPonto.Models.Enums;
 namespace RegistroDoPonto.Models.DTOs;
 public class RegistroDoPontoDTO
 {
+    public int Id { get; set; } // Adicionado para incluir o ID do registro
     [Required]
     public string UsuarioId { get; set; }
     [Required]

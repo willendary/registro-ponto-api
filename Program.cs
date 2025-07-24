@@ -11,7 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
-    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+    options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     options.JsonSerializerOptions.MaxDepth = 128;
 });
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -110,5 +110,23 @@ app.UseHttpsRedirection();
 app.UseCors("AllowSpecificOrigin"); // Adicionado
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Seed roles and admin user
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<AppDbContext>();
+        context.Database.Migrate(); // Apply any pending migrations
+        await DbInitializer.SeedRolesAndAdminUser(services);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error occurred while seeding the database.");
+    }
+}
+
 app.MapControllers();
 app.Run();

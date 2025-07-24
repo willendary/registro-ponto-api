@@ -29,6 +29,7 @@ public class RegistroPontoController : ControllerBase
 
         return Ok(registros.Select(r => new RegistroDoPontoDTO
         {
+            Id = r.Id,
             UsuarioId = r.UsuarioId,
             DataHora = r.DataHora,
             Tipo = r.Tipo
@@ -41,6 +42,7 @@ public class RegistroPontoController : ControllerBase
         var registros = await _context.Registros.ToListAsync();
         return Ok(registros.Select(r => new RegistroDoPontoDTO
         {
+            Id = r.Id,
             UsuarioId = r.UsuarioId,
             DataHora = r.DataHora,
             Tipo = r.Tipo
@@ -67,6 +69,7 @@ public class RegistroPontoController : ControllerBase
 
         var registroRetornoDto = new RegistroDoPontoDTO
         {
+            Id = novoRegistro.Id,
             UsuarioId = novoRegistro.UsuarioId,
             DataHora = novoRegistro.DataHora,
             Tipo = novoRegistro.Tipo
