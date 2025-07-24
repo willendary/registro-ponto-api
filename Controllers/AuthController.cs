@@ -60,7 +60,7 @@ public class AuthController : ControllerBase
         }
 
         var user = await _userManager.FindByEmailAsync(loginDto.Email);
-        if (user == null)
+        if (user == null || !user.IsAtivo)
         {
             ModelState.AddModelError(string.Empty, "Invalid login attempt.");
             return BadRequest(ModelState);

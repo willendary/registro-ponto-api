@@ -25,7 +25,7 @@ public class UsuariosController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<UsuarioDTOResponse>> PostUsuario([FromBody] RegistroUsuarioDTO registroDto)
     {
-        var user = new Usuario { UserName = registroDto.Email, Email = registroDto.Email, Nome = registroDto.Nome };
+        var user = new Usuario { UserName = registroDto.Email, Email = registroDto.Email, Nome = registroDto.Nome, IsAtivo = true };
         var result = await _userManager.CreateAsync(user, registroDto.Password);
 
         if (!result.Succeeded)
@@ -63,7 +63,7 @@ public class UsuariosController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<UsuarioDTOResponse>>> GetUsuarios()
     {
-        var usuarios = await _userManager.Users.ToListAsync();
+        var usuarios = await _userManager.Users.ToListAsync(); // Retorna todos os usuários
         var usuariosDtoResponse = new List<UsuarioDTOResponse>();
 
         foreach (var u in usuarios)
@@ -74,6 +74,7 @@ public class UsuariosController : ControllerBase
                 Id = u.Id,
                 Nome = u.Nome,
                 Email = u.Email,
+                IsAtivo = u.IsAtivo, // Inclui o status de ativo
                 Roles = roles
             });
         }
@@ -157,16 +158,40 @@ public class UsuariosController : ControllerBase
             return NotFound();
         }
 
-        var result = await _userManager.DeleteAsync(usuario);
+        var roles = await _userManager.GetRolesAsync(usuario);
+        if (roles.Contains("Admin"))
+        {
+            return BadRequest("Não é permitido inativar um usuário administrador.");
+        }
+
+        usuario.IsAtivo = false;
+        var result = await _userManager.UpdateAsync(usuario);
+
         if (!result.Succeeded)
         {
-            foreach (var error in result.Errors)
-            {
-                ModelState.AddModelError(string.Empty, error.Description);
-            }
-            return BadRequest(ModelState);
+            return BadRequest(result.Errors);
         }
 
         return NoContent();
+    }
+
+    [HttpPost("{id}/reactivate")]
+    public async Task<IActionResult> ReactivateUser(string id)
+    {
+        var user = await _userManager.FindByIdAsync(id);
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        user.IsAtivo = true;
+        var result = await _userManager.UpdateAsync(user);
+
+        if (!result.Succeeded)
+        {
+            return BadRequest(result.Errors);
+        }
+
+        return Ok(new { message = "Usuário reativado com sucesso." });
     }
 }

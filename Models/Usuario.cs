@@ -16,4 +16,7 @@ public class Usuario : IdentityUser
 
     // Propriedade de navegação para os registros de ponto
     public virtual ICollection<RegistroDoPonto> Registros { get; set; } = new List<RegistroDoPonto>();
+
+    [Required]
+    public bool IsAtivo { get; set; } = true;
 }

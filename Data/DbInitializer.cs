@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using RegistroDoPonto.Models;
 
 namespace RegistroDoPonto.Data;
@@ -33,13 +34,29 @@ public static class DbInitializer
                     UserName = "admin@example.com",
                     Email = "admin@example.com",
                     Nome = "Administrador",
-                    EmailConfirmed = true
+                    EmailConfirmed = true,
+                    IsAtivo = true // Garante que o admin seja criado como ativo
                 };
                 var createAdmin = await userManager.CreateAsync(adminUser, "Admin@123"); // Senha forte
                 if (createAdmin.Succeeded)
                 {
                     await userManager.AddToRoleAsync(adminUser, "Admin");
                 }
+            }
+        }
+    }
+
+    public static async Task ActivateExistingUsers(IServiceProvider serviceProvider)
+    {
+        using (var scope = serviceProvider.CreateScope())
+        {
+            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<Usuario>>();
+            var usersToUpdate = await userManager.Users.Where(u => !u.IsAtivo).ToListAsync();
+
+            foreach (var user in usersToUpdate)
+            {
+                user.IsAtivo = true;
+                await userManager.UpdateAsync(user);
             }
         }
     }

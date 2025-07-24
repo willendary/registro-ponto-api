@@ -120,6 +120,7 @@ using (var scope = app.Services.CreateScope())
         var context = services.GetRequiredService<AppDbContext>();
         context.Database.Migrate(); // Apply any pending migrations
         await DbInitializer.SeedRolesAndAdminUser(services);
+        await DbInitializer.ActivateExistingUsers(services); // Ativa usuários existentes
     }
     catch (Exception ex)
     {
